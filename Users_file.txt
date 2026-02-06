@@ -1,0 +1,1 @@
+{0: {'name': 'Molly Smith', 'email': 'SmithM@bookswithacoffee.com', 'password': 'Admin123', 'admin?': True}, 1: {'name': 'Sam', 'email': '22113061@cambria.ac.uk', 'password': 'Sam', 'admin?': False}, 2: {'name': 'Misha', 'email': '22113062@cambria.ac.uk', 'password': 'Misha', 'admin?': False}}
