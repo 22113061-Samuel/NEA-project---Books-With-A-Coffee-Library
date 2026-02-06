@@ -9,10 +9,10 @@ import ast
 with open ("Users_file.txt") as file:
     #While eval is considered unsafe, litteral eval is considered safer and reads the file from the last time accessed
     userdict = ast.literal_eval(file.read())
-with open("Books_file.text") as file2:
-    bookdict = ast.literal_eval(file2.read())
-
 print(userdict)
+    
+with open("Books_file.txt") as file:
+    bookdict = ast.literal_eval(file.read())
 print(bookdict)
 
     #This is the screen that takes us to the loging menu, then we can either login or create a new acount
@@ -94,6 +94,19 @@ def user_main_screen(): #Displays the main screen for non admin users that will 
     screen.geometry("400x400")
     Heading = Label(text="Welcome " + userdict[UserID]["name"],bg="light grey",width="25",height="2",font=(None,20)) #Hello user? #+ name
     Heading.pack()
+    treeview = ttk.Treeview(columns=("first name","last name","cost","status"))
+    treeview.heading("#0", text="loandict[][]")
+    treeview.heading("first name", text="loandict[][]")
+    treeview.heading("last name", text="loandict[][]")
+    treeview.heading("cost", text="loandict[][]")
+    treeview.heading("status", text="loandict[][]")    
+    treeview.insert(
+        "",
+        Tk.END,
+        text="loandict",
+        values=("i","I","i","I")        
+    )
+    treeview.pack()
     button = Button(screen, text="Login",font=(None,20),bg="light blue") #command=
     button.place(x=40,y=275)
     screen.mainloop()
@@ -130,7 +143,7 @@ def create_screen(): #creates a new acount without admin privilages
     Password_entry = Entry(textvariable = password, width = "38",font=(None,12), show = "*")
     Password_entry.place(x=25,y=235)
     Verify_Password_entry = Entry(textvariable = newpass, width = "38",font=(None,12),show = "*")
-    Verify_Password_entry.place(x=25,y=300)
+    Verify_Password_entry.place(linex=25,y=300)
 
     #This is a form of verification
     
@@ -233,19 +246,21 @@ def add_book():
                 if bookdict[BookCount]["title"] == title_got and bookdict[BookCount]["first name"] == FN_got and bookdict[BookCount]["last name"] == LN_got:
                     boolean = True
                 BookCount = BookCount + 1
-        if not title_got == "" and not FN_got == "" and not LN_got == "" and not Cost_got == 0:
+        if boolean == True:
+            messagebox.showerror("Error","This book already exists")
+        elif not title_got == "" and not FN_got == "" and not LN_got == "" and not Cost_got == 0:
             bookdict[BookCount] = {
                 "title" : title_got,
                 "first name" : FN_got,
                 "last name": LN_got,
-                "cost" : Cost_got
+                "cost" : Cost_got,
+                "loaned" : False
             }
             with open ("Books_file.txt","w") as file:
-                file.write(str(bookdict))    
-        elif boolean == True:
-            messagebox.showerror("error","please check the fields")
+                file.write(str(bookdict))
+            messagebox.showinfo("Saved","Book added to system")
         else:
-            messagebox.showerror("error","please check the fields")
+            messagebox.showerror("Error","please check the fields")
 
     Add_button = Button(screen, text="Add Book", command = add,font = (None,15),bg = "light blue")
     Add_button.place(x=40,y=350)
@@ -258,7 +273,8 @@ def add_book():
 
 #TableFrame = tk.Frame(self)
 
-login_screen()
+#login_screen()
 
 #add_book()
 
+user_main_screen()
