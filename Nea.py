@@ -143,7 +143,7 @@ def create_screen(): #creates a new acount without admin privilages
     Password_entry = Entry(textvariable = password, width = "38",font=(None,12), show = "*")
     Password_entry.place(x=25,y=235)
     Verify_Password_entry = Entry(textvariable = newpass, width = "38",font=(None,12),show = "*")
-    Verify_Password_entry.place(linex=25,y=300)
+    Verify_Password_entry.place(x=25,y=300)
 
     #This is a form of verification
     
@@ -273,8 +273,8 @@ def add_book():
 
 #TableFrame = tk.Frame(self)
 
-#login_screen()
+login_screen()
 
 #add_book()
 
-user_main_screen()
+#user_main_screen()
