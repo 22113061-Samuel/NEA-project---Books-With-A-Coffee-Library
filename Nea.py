@@ -2,9 +2,19 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 import ast
+from datetime import *
 
-#with open ("Users_file.txt","w") as file:
-    #file.write(str(userdict))
+#loandict = {}
+
+#loandict[0] = {
+#                    "user" : 0,
+ #                   "book" : 0,
+ #                   "current": "26/02/2026",
+  #                  "loan" : "27/02/2026"
+   #             }
+
+#with open ("Loans_file.txt","w") as file:
+    #file.write(str(loandict))
 
 with open ("Users_file.txt") as file:
     #While eval is considered unsafe, litteral eval is considered safer and reads the file from the last time accessed
@@ -14,6 +24,10 @@ print(userdict)
 with open("Books_file.txt") as file:
     bookdict = ast.literal_eval(file.read())
 print(bookdict)
+
+with open("Loans_file.txt") as file:
+    loandict = ast.literal_eval(file.read())
+print(loandict)
 
     #This is the screen that takes us to the loging menu, then we can either login or create a new acount
 
@@ -268,6 +282,25 @@ def add_book():
     Back_button = Button(screen, text = "Back", font = (None,15),bg = "light blue") #command =
     Back_button.place(x=270,y=350)
     screen.mainloop()
+
+#This makes loans
+
+def loans():
+
+    loandays = timedelta(days = 20)
+
+    today = date.today()
+    loan = today + loandays
+
+    print(tomorrow)
+
+    loandict[LoanCount] = {
+                    "user" : userdict,
+                    "book" : bookdict,
+                    "current": today,
+                    "loan" : loan
+                }
+    
 
 #This opens to the login page, starting the programme
 
