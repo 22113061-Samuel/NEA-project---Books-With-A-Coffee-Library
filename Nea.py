@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+from tkinter.messagebox import askyesno
 from tkinter import ttk
 import tkinter as tk
 import ast
@@ -38,18 +39,19 @@ def login_screen():
     #print(userdict)
 
     def login():
+        global UserID
         UserCount = 0
         boolean = False
         email_got = email.get().casefold()
         password_got = password.get()
         if email_got == userdict[0]["email"].casefold() and password_got == userdict[0]["password"]:
+            UserID = 0
             screen.destroy()
             admin_home_screen()   
         else:
             for i in userdict.items():
                 if userdict[UserCount]["email"].casefold() == email_got and userdict[UserCount]["password"] == password_got:
                     boolean = True
-                    global UserID
                     UserID = UserCount
                 UserCount = UserCount + 1
             if boolean == False:
@@ -87,7 +89,7 @@ def admin_home_screen(): #Screen in use for the admin acount
 
     def book_list():
         screen.destroy()
-        add_book()
+        loans()
 
     def back():
         screen.destroy()
@@ -118,15 +120,32 @@ def user_main_screen(): #Displays the main screen for non admin users that will 
     screen.geometry("400x400")
     Heading = Label(text="Welcome " + userdict[UserID]["name"],bg="light grey",width="25",height="2",font=(None,20)) #Hello user? #+ name
     Heading.pack()
+
+
     treeview = ttk.Treeview(columns=("author","due"))
     treeview.heading("#0", text="Title")
     treeview.heading("author", text="Author")
     treeview.heading("due", text="Due Date")
-    LoanCount = 0
-    for i in loandict:
-        if loandict[LoanCount]["user"] == UserID:
-            treeview.insert("", tk.END, text=bookdict[loandict[LoanCount]["book"]]["title"], values=(bookdict[loandict[LoanCount]["book"]]["first name"]+" "+bookdict[loandict[LoanCount]["book"]]["last name"],loandict[LoanCount]["loan"])        )
-        LoanCount = LoanCount + 1
+
+    def trees():
+
+        with open ("Users_file.txt") as file:
+            userdict = ast.literal_eval(file.read())
+
+        with open("Books_file.txt") as file:
+            bookdict = ast.literal_eval(file.read())
+
+        with open("Loans_file.txt") as file:
+            loandict = ast.literal_eval(file.read())
+
+        treeview.delete(*treeview.get_children())
+        
+        LoanCount = 0
+        for i in loandict:
+            if loandict[LoanCount]["user"] == UserID and bookdict[loandict[LoanCount]["book"]]["loaned"] == True:
+                treeview.insert("", tk.END, text=bookdict[loandict[LoanCount]["book"]]["title"], values=(bookdict[loandict[LoanCount]["book"]]["first name"]+" "+bookdict[loandict[LoanCount]["book"]]["last name"],loandict[LoanCount]["loan"])        )
+            LoanCount = LoanCount + 1
+            
     y_scrollbar = ttk.Scrollbar(screen, orient=tk.VERTICAL, command=treeview.yview)
     treeview.configure(yscrollcommand=y_scrollbar.set)
 
@@ -142,14 +161,47 @@ def user_main_screen(): #Displays the main screen for non admin users that will 
         screen.destroy()
         loans()
 
+    def review_book():
+        selected_item = treeview.focus()
+        screen.destroy()
+        review()
+
     def back():
         screen.destroy()
         login_screen()
+
+    def check_in():
+
+        with open("Books_file.txt") as file:
+            bookdict = ast.literal_eval(file.read())
+
+        selected_item = treeview.focus() # Get the ID of the selected item
+        print(selected_item)
+        if selected_item == "":
+            messagebox.showerror("Error", "Nothing to return")
+        else:
+            item_index = treeview.index(selected_item)
+
+            bookdict[item_index]["loaned"] = False
+
+            with open ("Books_file.txt","w") as file:
+                file.write(str(bookdict))
+                file.close()
+            messagebox.showinfo("Success", "You have returned " + bookdict[item_index]["title"])
+        
+            trees()
+
     
-    loan_button = Button(screen, text="Loan", command = loan_list, font=(None,20),bg="light blue") #command=
+    loan_button = Button(screen, text="Loan", command = loan_list, bg="light blue") #command=
     loan_button.pack()
-    back_button = Button(screen, text="Back", command = back, font=(None,20),bg="light blue") #command=
+    review_button = Button(screen, text="Review", command = review_book, bg="light blue") #command=
+    review_button.pack()
+    return_button = Button(screen, text="Return", command = check_in, bg="light blue") #command=
+    return_button.pack()
+    back_button = Button(screen, text="Back", command = back ,bg="light blue") #command=
     back_button.pack()
+
+    trees()
 
     screen.mainloop()
 
@@ -295,8 +347,10 @@ def add_book():
         Cost_got = cost.get()
         for i in bookdict.items():
                 if bookdict[BookCount]["title"] == title_got and bookdict[BookCount]["first name"] == FN_got and bookdict[BookCount]["last name"] == LN_got:
+                    #this will check if the book already exists
                     boolean = True
-                BookCount = BookCount + 1
+                if not bookdict[BookCount]["title"] == "":
+                    BookCount = BookCount + 1
         if boolean == True:
             messagebox.showerror("Error","This book already exists")
         elif not title_got == "" and not FN_got == "" and not LN_got == "" and not Cost_got == 0:
@@ -328,27 +382,35 @@ def add_book():
 
 def loans():
 
-    with open("Books_file.txt") as file:
-        bookdict = ast.literal_eval(file.read())
-
-    with open("Loans_file.txt") as file:
-        loandict = ast.literal_eval(file.read())
+    with open("Users_file.txt") as file:
+        userdict = ast.literal_eval(file.read())
 
     screen = tk.Tk()
     screen.title("Books with a Coffee Library")
     screen.geometry("400x400")
     Heading = Label(text="List of Books",bg="light grey",width="25",height="2",font=(None,20)) #Hello user? #+ name
-    Heading.pack()
+    Heading.pack() 
+
     treeview = ttk.Treeview(columns=("author","cost","loan"))
     treeview.heading("#0", text="Title")
     treeview.heading("author", text="Author")
-    treeview.heading("cost", text="Cost(in pence)")
-    treeview.heading("loan", text="On Loan")    
-    
-    BookCount = 0
-    for i in bookdict:
-        treeview.insert("", tk.END, text=bookdict[BookCount]["title"], values=(bookdict[BookCount]["first name"]+" "+bookdict[BookCount]["last name"],bookdict[BookCount]["cost"],bookdict[BookCount]["loaned"]))
-        BookCount = BookCount + 1
+    treeview.heading("cost", text="Cost")
+    treeview.heading("loan", text="On Loan")   
+
+
+    def trees():
+        with open("Books_file.txt") as file:
+            bookdict = ast.literal_eval(file.read())
+
+        with open("Loans_file.txt") as file:
+            loandict = ast.literal_eval(file.read())
+
+        treeview.delete(*treeview.get_children())
+        BookCount = 0
+        for i in bookdict:
+            treeview.insert("", tk.END, text=bookdict[BookCount]["title"], values=(bookdict[BookCount]["first name"]+" "+bookdict[BookCount]["last name"],"£"+str(bookdict[BookCount]["cost"]/100), bookdict[BookCount]["loaned"]))
+            BookCount = BookCount + 1
+            
     y_scrollbar = ttk.Scrollbar(screen, orient=tk.VERTICAL, command=treeview.yview)
     treeview.configure(yscrollcommand=y_scrollbar.set)
 
@@ -392,6 +454,7 @@ def loans():
             with open ("Loans_file.txt","w") as file:
                 file.write(str(loandict))
                 file.close()
+                
             bookdict[item_index]["loaned"] = True
 
             with open ("Books_file.txt","w") as file:
@@ -402,8 +465,48 @@ def loans():
         else:
             messagebox.showerror("Unsuccessful","This book is aleady on loan")
 
-    loan_button = Button(screen, text="Loan", command = select_loan, font=(None,20),bg="light blue") #command=
-    loan_button.pack()
+        trees()
+
+    def buy():
+        with open("Books_file.txt") as file:
+            bookdict = ast.literal_eval(file.read())
+        selected_item = treeview.focus() # Get the ID of the selected item
+        item_index = treeview.index(selected_item)
+        if userdict[UserID]["admin?"] == False:
+            buying = askyesno(title="Checking", message="Are you sure that you want to buy " + bookdict[item_index]["title"] + " for " + "£" + str(bookdict[item_index]["cost"]/100) + "?")
+        else:
+            deleting = askyesno(title="Checking", message="Are you sure that you want to delete " + bookdict[item_index]["title"] + "?")
+        if buying:
+            del bookdict[item_index]
+            with open ("Books_file.txt","w") as file:
+                file.write(str(bookdict))
+            trees()
+
+
+    def back():
+        screen.destroy()
+        if userdict[UserID]["admin?"] == True:
+            admin_home_screen()
+        else:
+            user_main_screen()
+
+    if userdict[UserID]["admin?"] == False:
+        loan_button = Button(screen, text="Loan", command = select_loan, bg="light blue") #command=
+        loan_button.pack()
+    #The buy button won't collect any details of payment, its based on a trust system
+    if userdict[UserID]["admin?"] == True:
+        Delete_button = Button(screen, text="Delete", command = buy, bg="light blue")
+        Delete_button.pack()
+    else:
+        buy_button = Button(screen, text="Buy", command = buy, bg="light blue") #command=
+        buy_button.pack()
+    back_button = Button(screen, text="Back", command = back, bg="light blue") #command=
+    back_button.pack()
+
+    trees()
+
+def review():
+    print(selcted_item)
 
 
 #This opens to the login page, starting the programme
