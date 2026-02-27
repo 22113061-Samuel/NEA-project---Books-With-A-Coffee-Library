@@ -1,1 +1,1 @@
-{0: {'title': 'Molly Smith', 'first name': 'SmithM@bookswithacoffee.com', 'last name': 'Admin123', 'cost': True}}
+{0: {'title': 'The Diary of a Young Girl', 'first name': 'Anne', 'last name': 'Frank', 'cost': 100, 'loaned': False}, 1: {'title': '1984', 'first name': 'George', 'last name': 'Orwell', 'cost': 100, 'loaned': False}}
