@@ -1,35 +1,11 @@
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
+import tkinter as tk
 import ast
 from datetime import *
 
-#loandict = {}
-
-#loandict[0] = {
-#                    "user" : 0,
- #                   "book" : 0,
- #                   "current": "26/02/2026",
-  #                  "loan" : "27/02/2026"
-   #             }
-
-#with open ("Loans_file.txt","w") as file:
-    #file.write(str(loandict))
-
-with open ("Users_file.txt") as file:
-    #While eval is considered unsafe, litteral eval is considered safer and reads the file from the last time accessed
-    userdict = ast.literal_eval(file.read())
-print(userdict)
-    
-with open("Books_file.txt") as file:
-    bookdict = ast.literal_eval(file.read())
-print(bookdict)
-
-with open("Loans_file.txt") as file:
-    loandict = ast.literal_eval(file.read())
-print(loandict)
-
-    #This is the screen that takes us to the loging menu, then we can either login or create a new acount
+#This is the screen that takes us to the loging menu, then we can either login or create a new acount
 
 def login_screen():
 
@@ -54,17 +30,24 @@ def login_screen():
     Password_entry = Entry(textvariable = password, width = "30",font=(None,15),show = "*")
     Password_entry.place(x=25,y=200)
 
+    #Open the user file for each itteration to allow it to be constantly updated
+
+    with open ("Users_file.txt") as file:
+    #While eval is considered unsafe, litteral eval is considered safer and reads the file from the last time accessed
+        userdict = ast.literal_eval(file.read())
+    #print(userdict)
+
     def login():
         UserCount = 0
         boolean = False
-        email_got = email.get()
+        email_got = email.get().casefold()
         password_got = password.get()
-        if email_got == userdict[0]["email"] and password_got == userdict[0]["password"]:
+        if email_got == userdict[0]["email"].casefold() and password_got == userdict[0]["password"]:
             screen.destroy()
             admin_home_screen()   
         else:
             for i in userdict.items():
-                if userdict[UserCount]["email"].casefold() == email_got.casefold() and userdict[UserCount]["password"] == password_got:
+                if userdict[UserCount]["email"].casefold() == email_got and userdict[UserCount]["password"] == password_got:
                     boolean = True
                     global UserID
                     UserID = UserCount
@@ -95,34 +78,79 @@ def admin_home_screen(): #Screen in use for the admin acount
     screen = Tk()
     screen.title("Books with a Coffee Library")
     screen.geometry("400x400")
-    Heading = Label(text="Welcome "+userdict[0]["name"],bg="light grey",width="25",height="2",font=(None,20)) #Hello user? #+ name
+    Heading = Label(text="Welcome Molly", bg="light grey",width="25",height="2",font=(None,20)) #Hello user? #+ name
     Heading.pack()
-    button = Button(screen, text="Login",font=(None,20),bg="light blue") #command=
-    button.place(x=40,y=275)
+
+    def new_book():
+        screen.destroy()
+        add_book()
+
+    def book_list():
+        screen.destroy()
+        add_book()
+
+    def back():
+        screen.destroy()
+        login_screen()
+
+    
+    new_button = Button(screen, text="Add New Book", command = new_book, font=(None,20),bg="light blue") #command=
+    new_button.pack()
+    view_button = Button(screen, text="View Book List", command = book_list, font=(None,20),bg="light blue") #command=
+    view_button.pack()
+    back_button = Button(screen, text="back", command = back, font=(None,20),bg="light blue") #command=
+    back_button.pack()
     screen.mainloop()
 
 def user_main_screen(): #Displays the main screen for non admin users that will be the centre for or other parts of the programme
 
-    screen = Tk()
+    with open ("Users_file.txt") as file:
+        userdict = ast.literal_eval(file.read())
+
+    with open("Books_file.txt") as file:
+        bookdict = ast.literal_eval(file.read())
+
+    with open("Loans_file.txt") as file:
+        loandict = ast.literal_eval(file.read())
+
+    screen = tk.Tk()
     screen.title("Books with a Coffee Library")
     screen.geometry("400x400")
     Heading = Label(text="Welcome " + userdict[UserID]["name"],bg="light grey",width="25",height="2",font=(None,20)) #Hello user? #+ name
     Heading.pack()
-    treeview = ttk.Treeview(columns=("first name","last name","cost","status"))
-    treeview.heading("#0", text="loandict[][]")
-    treeview.heading("first name", text="loandict[][]")
-    treeview.heading("last name", text="loandict[][]")
-    treeview.heading("cost", text="loandict[][]")
-    treeview.heading("status", text="loandict[][]")    
-    treeview.insert(
-        "",
-        Tk.END,
-        text="loandict",
-        values=("i","I","i","I")        
-    )
+    treeview = ttk.Treeview(columns=("author","due"))
+    treeview.heading("#0", text="Title")
+    treeview.heading("author", text="Author")
+    treeview.heading("due", text="Due Date")
+    LoanCount = 0
+    for i in loandict:
+        if loandict[LoanCount]["user"] == UserID:
+            treeview.insert("", tk.END, text=bookdict[loandict[LoanCount]["book"]]["title"], values=(bookdict[loandict[LoanCount]["book"]]["first name"]+" "+bookdict[loandict[LoanCount]["book"]]["last name"],loandict[LoanCount]["loan"])        )
+        LoanCount = LoanCount + 1
+    y_scrollbar = ttk.Scrollbar(screen, orient=tk.VERTICAL, command=treeview.yview)
+    treeview.configure(yscrollcommand=y_scrollbar.set)
+
+    x_scrollbar = ttk.Scrollbar(screen, orient=tk.HORIZONTAL, command=treeview.xview)
+    treeview.configure(xscrollcommand=x_scrollbar.set)
+
+    y_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
+    x_scrollbar.pack(side=tk.TOP, fill=tk.X)
+
     treeview.pack()
-    button = Button(screen, text="Login",font=(None,20),bg="light blue") #command=
-    button.place(x=40,y=275)
+    
+    def loan_list():
+        screen.destroy()
+        loans()
+
+    def back():
+        screen.destroy()
+        login_screen()
+    
+    loan_button = Button(screen, text="Loan", command = loan_list, font=(None,20),bg="light blue") #command=
+    loan_button.pack()
+    back_button = Button(screen, text="Back", command = back, font=(None,20),bg="light blue") #command=
+    back_button.pack()
+
     screen.mainloop()
 
 def create_screen(): #creates a new acount without admin privilages
@@ -159,6 +187,13 @@ def create_screen(): #creates a new acount without admin privilages
     Verify_Password_entry = Entry(textvariable = newpass, width = "38",font=(None,12),show = "*")
     Verify_Password_entry.place(x=25,y=300)
 
+    #Open the user file for each itteration to allow it to be constantly updated
+
+    with open ("Users_file.txt") as file:
+    #While eval is considered unsafe, litteral eval is considered safer and reads the file from the last time accessed
+        userdict = ast.literal_eval(file.read())
+    #print(userdict)
+    
     #This is a form of verification
     
     def newuser():
@@ -250,11 +285,13 @@ def add_book():
     #This command adds a book to the system if all the fields are valid
 
     def add():
+        with open("Books_file.txt") as file:
+            bookdict = ast.literal_eval(file.read())
         BookCount = 0
         boolean = False
-        title_got = title.get()
-        FN_got = authorFN.get()
-        LN_got = authorLN.get()
+        title_got = title.get().casefold()
+        FN_got = authorFN.get().casefold()
+        LN_got = authorLN.get().casefold()
         Cost_got = cost.get()
         for i in bookdict.items():
                 if bookdict[BookCount]["title"] == title_got and bookdict[BookCount]["first name"] == FN_got and bookdict[BookCount]["last name"] == LN_got:
@@ -276,10 +313,14 @@ def add_book():
         else:
             messagebox.showerror("Error","please check the fields")
 
+    def back():
+        screen.destroy()
+        admin_home_screen()
+
     Add_button = Button(screen, text="Add Book", command = add,font = (None,15),bg = "light blue")
     Add_button.place(x=40,y=350)
     #Button to bring the user back to the login page
-    Back_button = Button(screen, text = "Back", font = (None,15),bg = "light blue") #command =
+    Back_button = Button(screen, text = "Back", command = back, font = (None,15),bg = "light blue") #command =
     Back_button.place(x=270,y=350)
     screen.mainloop()
 
@@ -287,24 +328,89 @@ def add_book():
 
 def loans():
 
-    loandays = timedelta(days = 20)
+    with open("Books_file.txt") as file:
+        bookdict = ast.literal_eval(file.read())
 
-    today = date.today()
-    loan = today + loandays
+    with open("Loans_file.txt") as file:
+        loandict = ast.literal_eval(file.read())
 
-    print(tomorrow)
-
-    loandict[LoanCount] = {
-                    "user" : userdict,
-                    "book" : bookdict,
-                    "current": today,
-                    "loan" : loan
-                }
+    screen = tk.Tk()
+    screen.title("Books with a Coffee Library")
+    screen.geometry("400x400")
+    Heading = Label(text="List of Books",bg="light grey",width="25",height="2",font=(None,20)) #Hello user? #+ name
+    Heading.pack()
+    treeview = ttk.Treeview(columns=("author","cost","loan"))
+    treeview.heading("#0", text="Title")
+    treeview.heading("author", text="Author")
+    treeview.heading("cost", text="Cost(in pence)")
+    treeview.heading("loan", text="On Loan")    
     
+    BookCount = 0
+    for i in bookdict:
+        treeview.insert("", tk.END, text=bookdict[BookCount]["title"], values=(bookdict[BookCount]["first name"]+" "+bookdict[BookCount]["last name"],bookdict[BookCount]["cost"],bookdict[BookCount]["loaned"]))
+        BookCount = BookCount + 1
+    y_scrollbar = ttk.Scrollbar(screen, orient=tk.VERTICAL, command=treeview.yview)
+    treeview.configure(yscrollcommand=y_scrollbar.set)
+
+    x_scrollbar = ttk.Scrollbar(screen, orient=tk.HORIZONTAL, command=treeview.xview)
+    treeview.configure(xscrollcommand=x_scrollbar.set)
+
+    y_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
+    x_scrollbar.pack(side=tk.TOP, fill=tk.X)
+
+    treeview.pack()
+
+    def select_loan():
+
+        with open("Books_file.txt") as file:
+            bookdict = ast.literal_eval(file.read())
+
+        with open("Loans_file.txt") as file:
+            loandict = ast.literal_eval(file.read())
+
+        selected_item = treeview.focus() # Get the ID of the selected item
+        item_index = treeview.index(selected_item)
+        
+        loandays = timedelta(days = 20)
+
+        today = date.today()
+        loan = today + loandays
+
+        if bookdict[item_index]["loaned"] == False:
+
+            LoanCount = 0
+            
+            for i in loandict:
+                LoanCount = LoanCount + 1
+
+            loandict[LoanCount] = {
+                    "user" : UserID,
+                    "book" : item_index,
+                    "current": str(today),
+                    "loan" : str(loan)
+                }
+            with open ("Loans_file.txt","w") as file:
+                file.write(str(loandict))
+                file.close()
+            bookdict[item_index]["loaned"] = True
+
+            with open ("Books_file.txt","w") as file:
+                file.write(str(bookdict))
+                file.close()
+            messagebox.showinfo("Success", "You have " + bookdict[item_index]["title"] + " for 20 days")
+
+        else:
+            messagebox.showerror("Unsuccessful","This book is aleady on loan")
+
+    loan_button = Button(screen, text="Loan", command = select_loan, font=(None,20),bg="light blue") #command=
+    loan_button.pack()
+
 
 #This opens to the login page, starting the programme
 
 #TableFrame = tk.Frame(self)
+
+#loans()
 
 login_screen()
 
