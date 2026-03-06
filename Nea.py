@@ -122,9 +122,10 @@ def user_main_screen(): #Displays the main screen for non admin users that will 
     Heading.pack()
 
 
-    treeview = ttk.Treeview(columns=("author","due"))
-    treeview.heading("#0", text="Title")
+    treeview = ttk.Treeview(columns=("title","author","due"))
+    treeview.heading("#0", text="Book ID")
     treeview.heading("author", text="Author")
+    treeview.heading("title", text="Title")
     treeview.heading("due", text="Due Date")
 
     def trees():
@@ -138,13 +139,14 @@ def user_main_screen(): #Displays the main screen for non admin users that will 
         with open("Loans_file.txt") as file:
             loandict = ast.literal_eval(file.read())
 
-        treeview.delete(*treeview.get_children())
-        
+        treeview.delete(*treeview.get_children())        
         LoanCount = 0
         for i in loandict:
             if loandict[LoanCount]["user"] == UserID and bookdict[loandict[LoanCount]["book"]]["loaned"] == True:
-                treeview.insert("", tk.END, text=bookdict[loandict[LoanCount]["book"]]["title"], values=(bookdict[loandict[LoanCount]["book"]]["first name"]+" "+bookdict[loandict[LoanCount]["book"]]["last name"],loandict[LoanCount]["loan"])        )
+                treeview.insert("", tk.END, text=loandict[LoanCount]["book"], values=(bookdict[loandict[LoanCount]["book"]]["title"],bookdict[loandict[LoanCount]["book"]]["first name"]+" "+bookdict[loandict[LoanCount]["book"]]["last name"],loandict[LoanCount]["loan"])        )
             LoanCount = LoanCount + 1
+
+
             
     y_scrollbar = ttk.Scrollbar(screen, orient=tk.VERTICAL, command=treeview.yview)
     treeview.configure(yscrollcommand=y_scrollbar.set)
@@ -163,8 +165,12 @@ def user_main_screen(): #Displays the main screen for non admin users that will 
 
     def review_book():
         selected_item = treeview.focus()
-        screen.destroy()
-        review()
+        if selected_item == "":
+            messagebox.showerror("Error", "Nothing to review")
+        else:
+            item_index = treeview.item(selected_item,"text")
+            screen.destroy()
+            review(item_index)
 
     def back():
         screen.destroy()
@@ -175,12 +181,12 @@ def user_main_screen(): #Displays the main screen for non admin users that will 
         with open("Books_file.txt") as file:
             bookdict = ast.literal_eval(file.read())
 
-        selected_item = treeview.focus() # Get the ID of the selected item
-        print(selected_item)
+        selected_item = treeview.focus()
+        item_index = treeview.item(selected_item,"text") # Get the ID of the selected item
+        
         if selected_item == "":
             messagebox.showerror("Error", "Nothing to return")
         else:
-            item_index = treeview.index(selected_item)
 
             bookdict[item_index]["loaned"] = False
 
@@ -258,7 +264,6 @@ def create_screen(): #creates a new acount without admin privilages
         
         if not passer == "" and not namer == "" and not emailer == "" and passer == newpasser and "@" in emailer:
             #read from file
-            #https://www.w3schools.com/python/python_dictionaries_nested.asp
             for i in userdict.items():
                 if userdict[UserCount]["email"].casefold() == emailer.casefold():
                     boolean = False
@@ -482,6 +487,16 @@ def loans():
                 file.write(str(bookdict))
             trees()
 
+    def reviews():
+        with open("Books_file.txt") as file:
+            bookdict = ast.literal_eval(file.read())
+        selected_item = treeview.focus() # Get the ID of the selected item
+        item_index = treeview.index(selected_item)
+        if selected_item == "":
+            messagebox.showerror("Error", "Nothing to view")
+        else:
+            screen.destroy()
+            view_reviews(item_index)
 
     def back():
         screen.destroy()
@@ -500,14 +515,137 @@ def loans():
     else:
         buy_button = Button(screen, text="Buy", command = buy, bg="light blue") #command=
         buy_button.pack()
+    view_button = Button(screen, text="View Reviews", command = reviews, bg="light blue") #command=
+    view_button.pack()
     back_button = Button(screen, text="Back", command = back, bg="light blue") #command=
     back_button.pack()
 
     trees()
 
-def review():
-    print(selcted_item)
+#This is the function that allows for users to create reviews
 
+def review(item_index):
+
+    with open("Books_file.txt") as file:
+        bookdict = ast.literal_eval(file.read())
+
+    with open ("Users_file.txt") as file:
+        userdict = ast.literal_eval(file.read())
+    
+    screen = tk.Tk()
+    screen.title("Books with a Coffee Library")
+    screen.geometry("400x400")
+    Heading = Label(text="Reviewing Book",bg="light grey",width="25",height="2",font=(None,20)) #Hello user? #+ name
+    Heading.pack()
+
+    name = StringVar()
+    title = StringVar()
+    review = StringVar()
+
+    Reviewing = Label(screen, text="Reviewing: " + bookdict[item_index]["title"],font=(None,15))
+    Reviewing.place(x=0,y=80)
+
+    Name = Label(screen, text="Name:",font=(None,15))
+    Name.place(x=0,y=110)
+    Name_entry = Entry(textvariable = name, width = "25",font=(None,15))
+    Name_entry.place(x=75,y=110)
+
+    Title = Label(screen, text="Review Title:",font=(None,15))
+    Title.place(x=0,y=140)
+    Title_entry = Entry(textvariable = title, width = "20",font=(None,15))
+    Title_entry.place(x=125,y=140)
+
+    Title = Label(screen, text="Review:",font=(None,15))
+    Title.place(x=0,y=170)
+    Review_entry = Entry(textvariable = review, width = "54", font=(None,10))
+    Review_entry.place(x=10,y=200)
+
+    def publish():
+        with open ("Reviews_file.txt") as file:
+            reviewdict = ast.literal_eval(file.read())
+        name_got = name.get()
+        title_got = title.get()
+        review_got = review.get()
+        if review_got == "" or title_got == "" or name == "":
+            messagebox.showerror("Unsuccessful","One of the fields are not filled in")
+        else:
+            ReviewCount = 0
+            for i in reviewdict:
+                ReviewCount = ReviewCount + 1
+            reviewdict[ReviewCount] = {
+                "user" : UserID,
+                "name" : name_got,
+                "book" : item_index,
+                "title": title_got,
+                "review" : review_got
+            }
+
+        with open("Reviews_file.txt","w") as file:
+            file.write(str(reviewdict))
+
+    def back():
+        screen.destroy()
+        user_main_screen()
+
+    publish_button = Button(screen, text="Publish", command = publish, font = (None,20), bg="light blue") #command=
+    publish_button.place(x=40,y=275)
+    back_button = Button(screen, text="Back", command = back, font = (None,20), bg="light blue") #command=
+    back_button.place(x=230,y=275)
+
+def view_reviews(item_index):
+
+    screen = tk.Tk()
+    screen.title("Books with a Coffee Library")
+    screen.geometry("400x400")
+    Heading = Label(text="Displating User Reviews",bg="light grey",width="25",height="2",font=(None,20))
+    Heading.pack() 
+
+    with open("Books_file.txt") as file:
+         bookdict = ast.literal_eval(file.read())
+
+    with open("Reviews_file.txt") as file:
+        reviewdict = ast.literal_eval(file.read())
+
+    treeview = ttk.Treeview(columns=("name","title"))
+    treeview.heading("#0", text="Review")
+    treeview.heading("name", text="Name")
+    treeview.heading("title", text="Review Title")
+    
+    ReviewCount = 0
+    for i in reviewdict:
+        if reviewdict[ReviewCount]["book"] == item_index:
+            treeview.insert("", tk.END, text=ReviewCount, values=(reviewdict[ReviewCount]["name"],reviewdict[ReviewCount]["title"]))
+        ReviewCount = ReviewCount + 1
+            
+    y_scrollbar = ttk.Scrollbar(screen, orient=tk.VERTICAL, command=treeview.yview)
+    treeview.configure(yscrollcommand=y_scrollbar.set)
+
+    x_scrollbar = ttk.Scrollbar(screen, orient=tk.HORIZONTAL, command=treeview.xview)
+    treeview.configure(xscrollcommand=x_scrollbar.set)
+
+    y_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
+    x_scrollbar.pack(side=tk.TOP, fill=tk.X)
+
+    treeview.pack()
+
+    def look():
+
+        selected_item = treeview.focus()
+        item_index = treeview.item(selected_item,"text") # Get the ID of the selected item
+        
+        if selected_item == "":
+            messagebox.showerror("Error", "Nothing to return")
+        else:
+            messagebox.showinfo(reviewdict[item_index]["title"], reviewdict[item_index]["review"])
+
+    def back():
+        screen.destroy()
+        loans()
+
+    look_button = Button(screen, text="View", command = look, font = (None,20), bg="light blue") #command=
+    look_button.place(x=40,y=350)
+    back_button = Button(screen, text="Back", command = back, font = (None,20), bg="light blue") #command=
+    back_button.place(x=230,y=350)
 
 #This opens to the login page, starting the programme
 
