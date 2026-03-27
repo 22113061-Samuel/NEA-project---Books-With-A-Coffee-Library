@@ -765,7 +765,7 @@ def view_reviews(item_index):
     #This effictively deltes any review that the staff deems inopropriate
     def delete():
         with open("Reviews_file.txt") as file:
-            reveiwdict = ast.literal_eval(file.read())
+            reviewdict = ast.literal_eval(file.read())
         selected_item = treeview.focus()
         #If nothing is selected then an error will be displayed
         if selected_item == "":
