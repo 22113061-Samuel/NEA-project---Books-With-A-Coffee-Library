@@ -748,7 +748,10 @@ def view_reviews(item_index):
     treeview.pack()
 
     #This will display a review that is chosen
+    
     def look():
+        with open("Reviews_file.txt") as file:
+            reveiwdict = ast.literal_eval(file.read())
         selected_item = treeview.focus()
         item_index = treeview.item(selected_item,"text") # Get the ID of the selected item
         #If nothing is selected then it will reutrn an error
